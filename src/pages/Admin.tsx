@@ -50,8 +50,13 @@ const Admin = () => {
     return () => { supabase.removeChannel(ch); };
   }, [isAdmin]);
 
-  const updateIntervention = async (id: string, field: string, value: string) => {
-    const { error } = await supabase.from("interventions").update({ [field]: value }).eq("id", id);
+  const updateIntervention = async (id: string, field: "status" | "remote_link" | "admin_notes", value: string) => {
+    const updateData = field === "status"
+      ? { status: value as "pending" | "in_progress" | "completed" | "cancelled" }
+      : field === "remote_link"
+      ? { remote_link: value }
+      : { admin_notes: value };
+    const { error } = await supabase.from("interventions").update(updateData).eq("id", id);
     if (error) toast({ title: "Erreur", description: error.message, variant: "destructive" });
     else toast({ title: "Mis à jour !" });
   };
