@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 const NelvisFooter = () => {
   return (
     <footer className="bg-primary text-primary-foreground">
@@ -37,9 +39,9 @@ const NelvisFooter = () => {
           <div>
             <h4 className="font-heading font-bold text-accent text-xs tracking-widest mb-3">LÉGAL</h4>
             <div className="flex flex-col gap-1">
-              <a href="#mentions-legales" className="text-primary-foreground/80 hover:text-accent transition-colors">Mentions légales</a>
-              <a href="#confidentialite" className="text-primary-foreground/80 hover:text-accent transition-colors">Politique de confidentialité</a>
-              <a href="#cgu" className="text-primary-foreground/80 hover:text-accent transition-colors">CGU & Charte déontologique</a>
+              <Link to="/mentions-legales" className="text-primary-foreground/80 hover:text-accent transition-colors">Mentions légales</Link>
+              <Link to="/politique-de-confidentialite" className="text-primary-foreground/80 hover:text-accent transition-colors">Politique de confidentialité</Link>
+              <Link to="/cgu" className="text-primary-foreground/80 hover:text-accent transition-colors">CGU & Charte déontologique</Link>
             </div>
           </div>
         </div>
