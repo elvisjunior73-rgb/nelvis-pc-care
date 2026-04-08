@@ -7,11 +7,11 @@ const NelvisFooter = () => {
         {/* Brand + Quote */}
         <div className="text-center mb-10">
           <h3 className="font-heading text-2xl font-extrabold tracking-tight mb-3">
-            <span className="text-accent">NELVIS</span> SANTÉ
+            🧠 <span className="text-accent">NELVIS</span>
           </h3>
           <p className="text-primary-foreground/60 italic text-sm max-w-xl mx-auto leading-relaxed">
-            "Nelvis Santé n'est pas une startup de la santé. C'est une infrastructure
-            médicale transfrontalière pensée pour durer."
+            "Nelvis analyse, répare et protège votre ordinateur grâce à l'intelligence artificielle.
+            Un assistant calme, précis et rassurant."
           </p>
         </div>
 
