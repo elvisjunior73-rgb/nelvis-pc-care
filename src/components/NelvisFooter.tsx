@@ -73,7 +73,7 @@ const NelvisFooter = () => {
 
         {/* Copyright */}
         <div className="border-t border-primary-foreground/10 pt-6 text-center text-xs text-primary-foreground/40">
-          <p>© 2026 NELVIS SANTÉ — Tous droits réservés</p>
+          <p>© 2026 NELVIS — Tous droits réservés</p>
         </div>
       </div>
     </footer>
