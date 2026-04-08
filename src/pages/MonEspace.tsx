@@ -5,7 +5,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, LogOut, ExternalLink, Clock, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
+import { ArrowLeft, LogOut, ExternalLink, Clock, CheckCircle, AlertCircle, Loader2, CreditCard, Shield } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 import type { Tables } from "@/integrations/supabase/types";
 import NelvisFooter from "@/components/NelvisFooter";
 
@@ -19,9 +20,31 @@ const statusLabels: Record<string, { label: string; color: string; icon: any }> 
 const MonEspace = () => {
   const { user, loading, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [interventions, setInterventions] = useState<Tables<"interventions">[]>([]);
   const [payments, setPayments] = useState<Tables<"payments">[]>([]);
   const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
+  const [paying, setPaying] = useState<string | null>(null);
+
+  const handlePay = async (type: "repair" | "protection", amount: number, description: string) => {
+    if (!user) return;
+    setPaying(type);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-mollie-payment", {
+        body: { type, amount, description, userId: user.id },
+      });
+      if (error) throw error;
+      if (data?.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        throw new Error("Pas de lien de paiement");
+      }
+    } catch (err: any) {
+      toast({ title: "Erreur de paiement", description: err.message, variant: "destructive" });
+    } finally {
+      setPaying(null);
+    }
+  };
 
   useEffect(() => {
     if (!loading && !user) navigate("/connexion");
@@ -76,6 +99,28 @@ const MonEspace = () => {
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className="font-heading text-3xl font-bold mb-2">Mon espace</h1>
           <p className="text-muted-foreground mb-8">Bienvenue, {profile?.full_name || user?.email}</p>
+
+          {/* Payment actions */}
+          <section className="mb-10 grid sm:grid-cols-2 gap-4">
+            <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center text-center gap-3">
+              <CreditCard className="w-8 h-8 text-accent" />
+              <h3 className="font-heading font-semibold">Réparation complète</h3>
+              <p className="text-sm text-muted-foreground">Diagnostic + réparation de votre PC par un technicien</p>
+              <p className="font-bold text-lg">29,99€</p>
+              <Button onClick={() => handlePay("repair", 29.99, "NELVIS – Réparation complète")} disabled={paying === "repair"} className="w-full">
+                {paying === "repair" ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Redirection…</> : "Payer 29,99€"}
+              </Button>
+            </div>
+            <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center text-center gap-3">
+              <Shield className="w-8 h-8 text-primary" />
+              <h3 className="font-heading font-semibold">Protection mensuelle</h3>
+              <p className="text-sm text-muted-foreground">Surveillance et maintenance continue de votre PC</p>
+              <p className="font-bold text-lg">4,99€/mois</p>
+              <Button variant="outline" onClick={() => handlePay("protection", 4.99, "NELVIS – Protection mensuelle")} disabled={paying === "protection"} className="w-full">
+                {paying === "protection" ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Redirection…</> : "S'abonner 4,99€/mois"}
+              </Button>
+            </div>
+          </section>
 
           {/* Interventions */}
           <section className="mb-10">
