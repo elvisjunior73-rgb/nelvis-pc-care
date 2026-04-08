@@ -1,6 +1,11 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Turtle, Trash2, AlertTriangle, Lock, Wrench } from "lucide-react";
+import { Turtle, Trash2, AlertTriangle, Lock, Wrench, CreditCard, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 interface Props {
   onRepair: () => void;
@@ -21,6 +26,34 @@ const plan = [
 ];
 
 const ResultsScreen = ({ onRepair }: Props) => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [paying, setPaying] = useState(false);
+
+  const handlePay = async () => {
+    if (!user) {
+      navigate("/connexion");
+      return;
+    }
+    setPaying(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-mollie-payment", {
+        body: { type: "repair", amount: 29.99, description: "NELVIS – Réparation complète", userId: user.id },
+      });
+      if (error) throw error;
+      if (data?.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      } else {
+        throw new Error("Pas de lien de paiement");
+      }
+    } catch (err: any) {
+      toast({ title: "Erreur de paiement", description: err.message, variant: "destructive" });
+    } finally {
+      setPaying(false);
+    }
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <motion.div
@@ -110,14 +143,19 @@ const ResultsScreen = ({ onRepair }: Props) => {
             Réparation complète Nelvis — <span className="font-bold text-foreground">29,99€</span>
           </p>
           <Button
-            onClick={onRepair}
+            onClick={handlePay}
+            disabled={paying}
             size="lg"
             className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg px-10 py-7 rounded-xl shadow-lg shadow-accent/30 font-semibold"
           >
-            ⚙️ Réparer maintenant
+            {paying ? (
+              <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Redirection…</>
+            ) : (
+              <><CreditCard className="w-5 h-5 mr-2" /> Payer 29,99€ et réparer</>
+            )}
           </Button>
           <p className="text-xs text-muted-foreground mt-3">
-            Intervention sécurisée • Résultats immédiats • Garantie satisfait ou remboursé
+            Paiement sécurisé via Mollie • Résultats immédiats • Garantie satisfait ou remboursé
           </p>
         </div>
       </motion.div>
