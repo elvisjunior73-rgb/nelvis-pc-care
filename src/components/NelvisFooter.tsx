@@ -13,6 +13,7 @@ const NelvisFooter = () => {
           </p>
         </div>
 
+        {/* Contact grid */}
         <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6 text-sm mb-10">
           <div className="flex items-start gap-3">
             <MapPin className="w-4 h-4 mt-0.5 text-accent shrink-0" />
@@ -40,7 +41,23 @@ const NelvisFooter = () => {
           </div>
         </div>
 
-        <div className="border-t border-primary-foreground/10 pt-6 text-center text-xs text-primary-foreground/50">
+        {/* Legal links */}
+        <div className="border-t border-primary-foreground/10 pt-6 mb-6">
+          <div className="flex flex-wrap justify-center gap-4 text-xs text-primary-foreground/60">
+            <a href="#mentions-legales" className="hover:text-accent transition-colors">Mentions légales</a>
+            <span className="text-primary-foreground/20">|</span>
+            <a href="#cgv" className="hover:text-accent transition-colors">Conditions Générales de Vente</a>
+            <span className="text-primary-foreground/20">|</span>
+            <a href="#cgu" className="hover:text-accent transition-colors">Conditions Générales d'Utilisation</a>
+            <span className="text-primary-foreground/20">|</span>
+            <a href="#confidentialite" className="hover:text-accent transition-colors">Politique de confidentialité</a>
+            <span className="text-primary-foreground/20">|</span>
+            <a href="#cookies" className="hover:text-accent transition-colors">Gestion des cookies</a>
+          </div>
+        </div>
+
+        {/* Bottom */}
+        <div className="text-center text-xs text-primary-foreground/50">
           <p>SIRET : 927 569 111 00010</p>
           <p className="mt-1">© 2026 NELVIS — Tous droits réservés</p>
         </div>
