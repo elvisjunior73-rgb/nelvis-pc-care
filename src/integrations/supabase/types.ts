@@ -20,7 +20,9 @@ export type Database = {
           category: string
           created_at: string
           description: string | null
+          email: string | null
           id: string
+          license_code: string | null
           remote_link: string | null
           status: Database["public"]["Enums"]["intervention_status"]
           updated_at: string
@@ -31,7 +33,9 @@ export type Database = {
           category: string
           created_at?: string
           description?: string | null
+          email?: string | null
           id?: string
+          license_code?: string | null
           remote_link?: string | null
           status?: Database["public"]["Enums"]["intervention_status"]
           updated_at?: string
@@ -42,7 +46,9 @@ export type Database = {
           category?: string
           created_at?: string
           description?: string | null
+          email?: string | null
           id?: string
+          license_code?: string | null
           remote_link?: string | null
           status?: Database["public"]["Enums"]["intervention_status"]
           updated_at?: string
