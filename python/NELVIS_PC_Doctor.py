@@ -89,13 +89,16 @@ SCRIPTS_EMBEDDED = {
 }
 
 def get_scripts_dir() -> Path:
-    """Extrait les scripts PS1 embarqués dans un dossier temporaire et retourne son chemin."""
-    tmp_dir = Path(tempfile.mkdtemp(prefix="nelvis_"))
+    """Extrait les scripts PS1 embarqués dans C:\\NELVIS\\scripts\ (hors TEMP) et retourne son chemin."""
+    # IMPORTANT : Ne pas utiliser tempfile.mkdtemp() car le script 01 nettoie le dossier TEMP
+    # et supprimerait les scripts 02-10 pendant l'exécution.
+    scripts_dir = Path("C:/NELVIS/scripts")
+    scripts_dir.mkdir(parents=True, exist_ok=True)
     for script_name, b64_content in SCRIPTS_EMBEDDED.items():
         script_content = base64.b64decode(b64_content).decode('utf-8')
-        script_path = tmp_dir / script_name
+        script_path = scripts_dir / script_name
         script_path.write_text(script_content, encoding='utf-8')
-    return tmp_dir
+    return scripts_dir
 
 
 def run_powershell(script_path: Path) -> dict:
