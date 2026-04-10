@@ -23,7 +23,11 @@ const MonEspace = () => {
     try {
       const res = await fetch(`${EXTERNAL_SUPABASE_URL}/functions/v1/check-license`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imloc3lseHh1YWtwcWNpeXdlaWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NDU3MzAsImV4cCI6MjA5MTQyMTczMH0.Ry3XV_8GRiRHJNjPaFzTqTUFMfFfGnGTHHJUFHCzpbQ",
+          "apikey": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imloc3lseHh1YWtwcWNpeXdlaWVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU4NDU3MzAsImV4cCI6MjA5MTQyMTczMH0.Ry3XV_8GRiRHJNjPaFzTqTUFMfFfGnGTHHJUFHCzpbQ",
+        },
         body: JSON.stringify({ code: code.trim() }),
       });
       const data = await res.json();
