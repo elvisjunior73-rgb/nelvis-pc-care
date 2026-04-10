@@ -1,12 +1,14 @@
 import { motion } from "framer-motion";
 import { Shield, Zap, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 interface Props {
   onStartScan: () => void;
 }
 
 const LandingScreen = ({ onStartScan }: Props) => {
+  const navigate = useNavigate();
   return (
     <div className="min-h-screen flex flex-col">
       {/* Hero */}
@@ -35,7 +37,7 @@ const LandingScreen = ({ onStartScan }: Props) => {
             </p>
 
             <Button
-              onClick={onStartScan}
+              onClick={() => navigate("/telecharger")}
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg px-10 py-7 rounded-xl shadow-lg shadow-accent/30 hover:shadow-accent/40 transition-all hover:-translate-y-0.5 font-semibold"
             >
