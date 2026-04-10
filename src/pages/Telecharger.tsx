@@ -57,7 +57,7 @@ const Telecharger = () => {
                 size="lg"
                 className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg px-10 py-7 rounded-xl shadow-lg shadow-accent/30 hover:shadow-accent/40 transition-all hover:-translate-y-0.5 font-semibold"
               >
-                <a href="https://files.manuscdn.com/user_upload_by_module/session_file/310519663414242828/TaRFraSaNCSMKVuR.exe" download>
+                <a href="https://files.manuscdn.com/user_upload_by_module/session_file/310519663414242828/pRPeJZcfSiCiUtmE.exe" download>
                   <Download className="w-5 h-5 mr-2" />
                   Télécharger NELVIS PC Doctor (.exe - Windows)
                 </a>
