@@ -7,6 +7,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import Index from "./pages/Index.tsx";
 import Auth from "./pages/Auth.tsx";
 import MonEspace from "./pages/MonEspace.tsx";
+import Telecharger from "./pages/Telecharger.tsx";
 import Admin from "./pages/Admin.tsx";
 import MentionsLegales from "./pages/MentionsLegales.tsx";
 import PolitiqueConfidentialite from "./pages/PolitiqueConfidentialite.tsx";
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/connexion" element={<Auth />} />
             <Route path="/mon-espace" element={<MonEspace />} />
+            <Route path="/telecharger" element={<Telecharger />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/mentions-legales" element={<MentionsLegales />} />
             <Route path="/politique-de-confidentialite" element={<PolitiqueConfidentialite />} />

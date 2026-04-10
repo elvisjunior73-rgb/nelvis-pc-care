@@ -1,81 +1,43 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, LogOut, ExternalLink, Clock, CheckCircle, AlertCircle, Loader2, CreditCard, Shield } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import type { Tables } from "@/integrations/supabase/types";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { ArrowLeft, KeyRound, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import NelvisFooter from "@/components/NelvisFooter";
 
-const statusLabels: Record<string, { label: string; color: string; icon: any }> = {
-  pending: { label: "En attente", color: "bg-yellow-500/10 text-yellow-600", icon: Clock },
-  in_progress: { label: "En cours", color: "bg-blue-500/10 text-blue-600", icon: Loader2 },
-  completed: { label: "Terminé", color: "bg-green-500/10 text-green-600", icon: CheckCircle },
-  cancelled: { label: "Annulé", color: "bg-red-500/10 text-red-600", icon: AlertCircle },
-};
+const EXTERNAL_SUPABASE_URL = "https://ihsylxxuakpqciyweied.supabase.co";
 
 const MonEspace = () => {
-  const { user, loading, signOut, isAdmin } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  const [interventions, setInterventions] = useState<Tables<"interventions">[]>([]);
-  const [payments, setPayments] = useState<Tables<"payments">[]>([]);
-  const [profile, setProfile] = useState<Tables<"profiles"> | null>(null);
-  const [paying, setPaying] = useState<string | null>(null);
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
 
-  const handlePay = async (type: "repair" | "protection", amount: number, description: string) => {
-    if (!user) return;
-    setPaying(type);
+  const handleCheck = async () => {
+    if (!code.trim()) return;
+    setLoading(true);
+    setResult(null);
     try {
-      const { data, error } = await supabase.functions.invoke("create-mollie-payment", {
-        body: { type, amount, description, userId: user.id },
+      const res = await fetch(`${EXTERNAL_SUPABASE_URL}/functions/v1/check-license`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: code.trim() }),
       });
-      if (error) throw error;
-      if (data?.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+      const data = await res.json();
+      if (res.ok) {
+        setResult({ success: true, message: data.message || "Code licence valide !" });
       } else {
-        throw new Error("Pas de lien de paiement");
+        setResult({ success: false, message: data.error || data.message || "Code licence invalide." });
       }
-    } catch (err: any) {
-      toast({ title: "Erreur de paiement", description: err.message, variant: "destructive" });
+    } catch {
+      setResult({ success: false, message: "Erreur de connexion au serveur. Réessayez." });
     } finally {
-      setPaying(null);
+      setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (!loading && !user) navigate("/connexion");
-  }, [user, loading]);
-
-  useEffect(() => {
-    if (!user) return;
-    const fetchData = async () => {
-      const [{ data: p }, { data: i }, { data: pay }] = await Promise.all([
-        supabase.from("profiles").select("*").eq("user_id", user.id).single(),
-        supabase.from("interventions").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-        supabase.from("payments").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
-      ]);
-      setProfile(p);
-      setInterventions(i || []);
-      setPayments(pay || []);
-    };
-    fetchData();
-
-    // Real-time subscription for interventions
-    const channel = supabase
-      .channel("my-interventions")
-      .on("postgres_changes", { event: "*", schema: "public", table: "interventions", filter: `user_id=eq.${user.id}` },
-        () => { fetchData(); }
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [user]);
-
-  if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="animate-spin w-8 h-8 text-primary" /></div>;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -84,127 +46,54 @@ const MonEspace = () => {
           <button onClick={() => navigate("/")} className="font-heading font-bold text-lg text-primary flex items-center gap-2">
             <ArrowLeft className="w-4 h-4" /> 🧠 NELVIS
           </button>
-          <div className="flex items-center gap-3">
-            {isAdmin && (
-              <Button variant="outline" size="sm" onClick={() => navigate("/admin")}>Admin</Button>
-            )}
-            <Button variant="ghost" size="sm" onClick={signOut}>
-              <LogOut className="w-4 h-4 mr-1" /> Déconnexion
-            </Button>
-          </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-5xl mx-auto px-4 py-8 w-full">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="font-heading text-3xl font-bold mb-2">Mon espace</h1>
-          <p className="text-muted-foreground mb-8">Bienvenue, {profile?.full_name || user?.email}</p>
-
-          {/* Payment actions */}
-          <section className="mb-10 grid sm:grid-cols-2 gap-4">
-            <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center text-center gap-3">
-              <CreditCard className="w-8 h-8 text-accent" />
-              <h3 className="font-heading font-semibold">Réparation complète</h3>
-              <p className="text-sm text-muted-foreground">Diagnostic + réparation de votre PC par un technicien</p>
-              <p className="font-bold text-lg">29,99€</p>
-              <Button onClick={() => handlePay("repair", 29.99, "NELVIS – Réparation complète")} disabled={paying === "repair"} className="w-full">
-                {paying === "repair" ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Redirection…</> : "Payer 29,99€"}
-              </Button>
+      <main className="flex-1 flex items-center justify-center px-4 py-16">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="max-w-md w-full"
+        >
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-primary/10 mb-4">
+              <KeyRound className="w-7 h-7 text-primary" />
             </div>
-            <div className="bg-card border border-border rounded-xl p-6 flex flex-col items-center text-center gap-3">
-              <Shield className="w-8 h-8 text-primary" />
-              <h3 className="font-heading font-semibold">Protection mensuelle</h3>
-              <p className="text-sm text-muted-foreground">Surveillance et maintenance continue de votre PC</p>
-              <p className="font-bold text-lg">4,99€/mois</p>
-              <Button variant="outline" onClick={() => handlePay("protection", 4.99, "NELVIS – Protection mensuelle")} disabled={paying === "protection"} className="w-full">
-                {paying === "protection" ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Redirection…</> : "S'abonner 4,99€/mois"}
-              </Button>
+            <h1 className="font-heading text-2xl sm:text-3xl font-bold text-foreground mb-2">Mon espace</h1>
+            <p className="text-muted-foreground">Vérifiez votre code licence pour activer NELVIS.</p>
+          </div>
+
+          <div className="bg-card border border-border rounded-xl p-6 space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="license-code">Code licence</Label>
+              <Input
+                id="license-code"
+                placeholder="Ex : NELVIS-XXXX-XXXX"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleCheck()}
+              />
             </div>
-          </section>
 
-          {/* Interventions */}
-          <section className="mb-10">
-            <h2 className="font-heading text-xl font-semibold mb-4">Mes interventions</h2>
-            {interventions.length === 0 ? (
-              <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground">
-                Aucune intervention pour le moment.
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {interventions.map((intv) => {
-                  const s = statusLabels[intv.status];
-                  const Icon = s.icon;
-                  return (
-                    <div key={intv.id} className="bg-card border border-border rounded-xl p-5">
-                      <div className="flex items-start justify-between gap-3 flex-wrap">
-                        <div>
-                          <h3 className="font-semibold text-foreground">{intv.category}</h3>
-                          {intv.description && <p className="text-sm text-muted-foreground mt-1">{intv.description}</p>}
-                          <p className="text-xs text-muted-foreground mt-2">
-                            {new Date(intv.created_at).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
-                          </p>
-                        </div>
-                        <div className="flex flex-col items-end gap-2">
-                          <Badge className={s.color}>
-                            <Icon className="w-3 h-3 mr-1" /> {s.label}
-                          </Badge>
-                          {intv.remote_link && (
-                            <a href={intv.remote_link} target="_blank" rel="noreferrer" className="text-xs text-primary flex items-center gap-1 hover:underline">
-                              <ExternalLink className="w-3 h-3" /> Prise en main à distance
-                            </a>
-                          )}
-                        </div>
-                      </div>
-                      {intv.admin_notes && (
-                        <div className="mt-3 p-3 bg-muted rounded-lg text-sm text-muted-foreground">
-                          <span className="font-medium text-foreground">Note du technicien :</span> {intv.admin_notes}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
+            <Button onClick={handleCheck} disabled={loading || !code.trim()} className="w-full">
+              {loading ? (
+                <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Vérification…</>
+              ) : (
+                "Vérifier mon code"
+              )}
+            </Button>
 
-          {/* Payments */}
-          <section>
-            <h2 className="font-heading text-xl font-semibold mb-4">Mes paiements</h2>
-            {payments.length === 0 ? (
-              <div className="bg-card border border-border rounded-xl p-8 text-center text-muted-foreground">
-                Aucun paiement enregistré.
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left py-3 px-2 font-medium text-muted-foreground">Date</th>
-                      <th className="text-left py-3 px-2 font-medium text-muted-foreground">Description</th>
-                      <th className="text-right py-3 px-2 font-medium text-muted-foreground">Montant</th>
-                      <th className="text-right py-3 px-2 font-medium text-muted-foreground">Statut</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {payments.map((p) => (
-                      <tr key={p.id} className="border-b border-border/50">
-                        <td className="py-3 px-2">{new Date(p.created_at).toLocaleDateString("fr-FR")}</td>
-                        <td className="py-3 px-2">{p.description || "—"}</td>
-                        <td className="py-3 px-2 text-right font-medium">{p.amount} {p.currency}</td>
-                        <td className="py-3 px-2 text-right">
-                          <Badge variant={p.status === "paid" ? "default" : "secondary"}>
-                            {p.status === "paid" ? "Payé" : p.status === "pending" ? "En attente" : p.status === "failed" ? "Échoué" : "Remboursé"}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            {result && (
+              <Alert variant={result.success ? "default" : "destructive"}>
+                {result.success ? <CheckCircle className="w-4 h-4" /> : <XCircle className="w-4 h-4" />}
+                <AlertTitle>{result.success ? "Licence valide" : "Erreur"}</AlertTitle>
+                <AlertDescription>{result.message}</AlertDescription>
+              </Alert>
             )}
-          </section>
+          </div>
         </motion.div>
       </main>
+
       <NelvisFooter />
     </div>
   );
