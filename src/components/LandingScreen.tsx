@@ -1,14 +1,8 @@
 import { motion } from "framer-motion";
-import { Shield, Zap, Eye } from "lucide-react";
+import { Shield, Zap, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
 
-interface Props {
-  onStartScan: () => void;
-}
-
-const LandingScreen = ({ onStartScan }: Props) => {
-  const navigate = useNavigate();
+const LandingScreen = () => {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Hero */}
@@ -33,16 +27,16 @@ const LandingScreen = ({ onStartScan }: Props) => {
             </h1>
 
             <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-xl mx-auto">
-              Analyse gratuite. Réparation complète. Sans jargon.
+              Téléchargez, lancez, votre PC est réparé en 15 minutes. Automatique, sans technicien.
             </p>
 
             <Button
-              onClick={() => navigate("/telecharger")}
+              onClick={() => { window.location.href = 'https://nelvis-pc.com/paiement'; }}
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg px-10 py-7 rounded-xl shadow-lg shadow-accent/30 hover:shadow-accent/40 transition-all hover:-translate-y-0.5 font-semibold"
             >
-              <Eye className="w-5 h-5 mr-2" />
-              Analyser mon PC gratuitement
+              <Download className="w-5 h-5 mr-2" />
+              Réparer mon PC maintenant — 10€
             </Button>
           </motion.div>
 
