@@ -31,7 +31,7 @@ const LandingScreen = () => {
             </p>
 
             <Button
-              onClick={() => { window.location.href = 'https://payment-links.mollie.com/payment/ehH4r98a4XjsAsuSctWdJ'; }}
+              onClick={() => { window.location.href = 'https://payment-links.mollie.com/payment/YziYpGY7nGNZXWbRamPHZ'; }}
               size="lg"
               className="bg-accent hover:bg-accent/90 text-accent-foreground text-lg px-10 py-7 rounded-xl shadow-lg shadow-accent/30 hover:shadow-accent/40 transition-all hover:-translate-y-0.5 font-semibold"
             >
