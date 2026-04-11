@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import LandingScreen from "@/components/LandingScreen";
+import ResellerFAQ from "@/components/ResellerFAQ";
 import KnowledgeBase from "@/components/KnowledgeBase";
 import NelvisFooter from "@/components/NelvisFooter";
 import { Button } from "@/components/ui/button";
@@ -44,6 +45,7 @@ const Index = () => {
       <main className="flex-1">
         <LandingScreen />
         <KnowledgeBase />
+        <ResellerFAQ />
       </main>
 
       <NelvisFooter />
