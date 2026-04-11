@@ -22,9 +22,16 @@ const Index = () => {
               Assistant intelligent de réparation PC
             </span>
             {user ? (
-              <Button variant="outline" size="sm" onClick={() => navigate("/mon-espace")}>
-                <User className="w-4 h-4 mr-1" /> Mon espace
-              </Button>
+              <div className="flex items-center gap-2">
+                {isAdmin && (
+                  <Button variant="outline" size="sm" onClick={() => navigate("/admin")}>
+                    <Shield className="w-4 h-4 mr-1" /> Admin
+                  </Button>
+                )}
+                <Button variant="outline" size="sm" onClick={() => navigate("/mon-espace")}>
+                  <User className="w-4 h-4 mr-1" /> Mon espace
+                </Button>
+              </div>
             ) : (
               <Button variant="outline" size="sm" onClick={() => navigate("/connexion")}>
                 <LogIn className="w-4 h-4 mr-1" /> Connexion
