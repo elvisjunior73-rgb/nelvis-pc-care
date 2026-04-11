@@ -14,6 +14,7 @@ import PolitiqueConfidentialite from "./pages/PolitiqueConfidentialite.tsx";
 import CGU from "./pages/CGU.tsx";
 import Confirmation from "./pages/Confirmation.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import ChatWidget from "./components/ChatWidget.tsx";
 
 const queryClient = new QueryClient();
 
