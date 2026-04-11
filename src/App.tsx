@@ -37,6 +37,7 @@ const App = () => (
             <Route path="/confirmation" element={<Confirmation />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          <ChatWidget />
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
