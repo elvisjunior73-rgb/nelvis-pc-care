@@ -4,7 +4,7 @@ import LandingScreen from "@/components/LandingScreen";
 import KnowledgeBase from "@/components/KnowledgeBase";
 import NelvisFooter from "@/components/NelvisFooter";
 import { Button } from "@/components/ui/button";
-import { LogIn, User } from "lucide-react";
+import { LogIn, User, Shield } from "lucide-react";
 
 const Index = () => {
   const { user } = useAuth();
