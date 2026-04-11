@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import LandingScreen from "@/components/LandingScreen";
 import ResellerFAQ from "@/components/ResellerFAQ";
+import Testimonials from "@/components/Testimonials";
 import KnowledgeBase from "@/components/KnowledgeBase";
 import NelvisFooter from "@/components/NelvisFooter";
 import { Button } from "@/components/ui/button";
