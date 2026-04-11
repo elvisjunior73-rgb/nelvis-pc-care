@@ -26,7 +26,6 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Look up the payment to find the intervention
     const { data: payment } = await supabase
       .from("payments")
       .select("*")
@@ -47,16 +46,32 @@ serve(async (req) => {
       });
     }
 
-    // Find the intervention with license code linked to this payment
     const { data: intervention } = await supabase
       .from("interventions")
       .select("license_code, email, created_at")
       .ilike("description", `%${paymentId}%`)
       .single();
 
+    // Parse license_code: could be JSON array or single string (legacy)
+    let licenseCodes: string[] = [];
+    if (intervention?.license_code) {
+      try {
+        const parsed = JSON.parse(intervention.license_code);
+        if (Array.isArray(parsed)) {
+          licenseCodes = parsed;
+        } else {
+          licenseCodes = [intervention.license_code];
+        }
+      } catch {
+        licenseCodes = [intervention.license_code];
+      }
+    }
+
     return new Response(JSON.stringify({
       status: "paid",
-      licenseCode: intervention?.license_code || null,
+      licenseCodes,
+      // Keep backward compat
+      licenseCode: licenseCodes[0] || null,
       email: intervention?.email || null,
     }), {
       status: 200,

@@ -31,7 +31,6 @@ serve(async (req) => {
       return new Response("Config error", { status: 500 });
     }
 
-    // Mollie sends webhook as form-encoded: id=tr_xxxxx
     const body = await req.text();
     const params = new URLSearchParams(body);
     const paymentId = params.get("id");
@@ -43,7 +42,6 @@ serve(async (req) => {
 
     console.log(`Webhook received for payment: ${paymentId}`);
 
-    // Fetch payment details from Mollie
     const mollieRes = await fetch(`https://api.mollie.com/v2/payments/${paymentId}`, {
       headers: { Authorization: `Bearer ${MOLLIE_API_KEY}` },
     });
@@ -56,18 +54,16 @@ serve(async (req) => {
     const payment = await mollieRes.json();
     console.log(`Payment status: ${payment.status}, amount: ${payment.amount?.value}`);
 
-    // Only process paid payments
     if (payment.status !== "paid") {
       console.log(`Payment ${paymentId} not paid (status: ${payment.status}), skipping`);
       return new Response("OK", { status: 200 });
     }
 
-    // Extract customer email from Mollie payment details
+    // Extract customer email
     const customerEmail = payment.details?.consumerName
       ? null
       : (payment.metadata?.email || payment.billingAddress?.email || null);
 
-    // Try to get email from Mollie customer endpoint if available
     let email = customerEmail;
     if (!email && payment._links?.customer?.href) {
       try {
@@ -83,41 +79,33 @@ serve(async (req) => {
       }
     }
 
-    // For payment links, email is in the payment details
-    if (!email && payment.details?.consumerAccount) {
-      // Bank transfer - no email available
-    }
-    
-    // Check _embedded for customer details
-    if (!email && payment._embedded?.payments?.[0]?.details?.consumerName) {
-      // Try alternative paths
-    }
-
-    // Mollie Payment Links collect email - it's often in the payment object directly
     if (!email) {
-      // For Payment Links, Mollie stores buyer email at payment level
-      email = payment.consumerEmail || payment.profileId || null;
+      email = payment.consumerEmail || null;
     }
 
     console.log(`Customer email: ${email || "not found"}`);
 
-    // Generate license code
-    const licenseCode = generateLicenseCode();
-    console.log(`Generated license code: ${licenseCode}`);
+    // Generate 6 license codes: 1 personal + 5 reseller
+    const licenseCodes: string[] = [];
+    for (let i = 0; i < 6; i++) {
+      licenseCodes.push(generateLicenseCode());
+    }
+    const licenseCodesJson = JSON.stringify(licenseCodes);
+    console.log(`Generated ${licenseCodes.length} license codes`);
 
     // Init Supabase
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Store intervention
+    // Store intervention with all codes as JSON
     const { error: insertError } = await supabase.from("interventions").insert({
-      user_id: "00000000-0000-0000-0000-000000000000", // anonymous purchase
+      user_id: "00000000-0000-0000-0000-000000000000",
       category: "repair",
       description: `Paiement Mollie ${paymentId} - ${payment.amount?.value} ${payment.amount?.currency}`,
       status: "pending",
       email: email,
-      license_code: licenseCode,
+      license_code: licenseCodesJson,
     });
 
     if (insertError) {
@@ -133,15 +121,23 @@ serve(async (req) => {
       amount: Number(payment.amount?.value || 0),
       currency: payment.amount?.currency || "EUR",
       status: "paid",
-      description: `NELVIS PC Doctor - Réparation`,
+      description: `NELVIS PC Doctor - Pack Revendeur (6 codes)`,
     });
 
-    // Send email with license code if we have the email
+    // Send email with all license codes
     if (email) {
       try {
-        // Use Resend API to send the license email
         const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
         if (RESEND_API_KEY) {
+          const codesHtml = licenseCodes.map((code, i) => {
+            const label = i === 0 ? "🖥️ Votre code personnel" : `🔑 Code revendeur #${i}`;
+            return `
+              <div style="background: ${i === 0 ? '#f0f0ff' : '#f9f9f9'}; border: ${i === 0 ? '2px solid #6366f1' : '1px solid #e0e0e0'}; border-radius: 10px; padding: 14px; margin: 8px 0; text-align: center;">
+                <div style="font-size: 12px; color: #888; margin-bottom: 4px;">${label}</div>
+                <span style="font-size: ${i === 0 ? '26px' : '22px'}; font-weight: bold; color: #6366f1; letter-spacing: 2px;">${code}</span>
+              </div>`;
+          }).join("");
+
           const emailRes = await fetch("https://api.resend.com/emails", {
             method: "POST",
             headers: {
@@ -151,21 +147,27 @@ serve(async (req) => {
             body: JSON.stringify({
               from: "NELVIS PC Doctor <noreply@nelvis-pc.com>",
               to: [email],
-              subject: "Votre code licence NELVIS PC Doctor",
+              subject: "Vos 6 codes licence NELVIS PC Doctor 🎉",
               html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
                   <h1 style="color: #6366f1; text-align: center;">🧠 NELVIS PC Doctor</h1>
                   <p>Bonjour,</p>
-                  <p>Merci pour votre achat ! Voici votre code licence :</p>
-                  <div style="background: #f0f0ff; border: 2px solid #6366f1; border-radius: 12px; padding: 20px; text-align: center; margin: 20px 0;">
-                    <span style="font-size: 28px; font-weight: bold; color: #6366f1; letter-spacing: 2px;">${licenseCode}</span>
+                  <p>Merci pour votre achat du <strong>Pack Revendeur</strong> ! Voici vos <strong>6 codes licence</strong> :</p>
+                  ${codesHtml}
+                  <div style="background: #fffbeb; border: 1px solid #f59e0b; border-radius: 10px; padding: 16px; margin: 20px 0;">
+                    <h3 style="color: #b45309; margin: 0 0 8px;">💡 Comment gagner de l'argent ?</h3>
+                    <p style="color: #92400e; margin: 0; font-size: 14px;">
+                      Revendez vos 5 codes à <strong>10€-20€ chacun</strong>. Le prix moyen en boutique : 30-80€.<br/>
+                      → Revendez à 10€ × 5 = <strong>50€ encaissés</strong><br/>
+                      → Revendez à 20€ × 5 = <strong>100€ encaissés</strong>
+                    </p>
                   </div>
-                  <h2 style="color: #333;">Comment utiliser votre licence :</h2>
+                  <h2 style="color: #333;">Comment utiliser un code :</h2>
                   <ol style="color: #555; line-height: 1.8;">
                     <li>Téléchargez NELVIS PC Doctor depuis <a href="https://nelvis-pc.com/telecharger" style="color: #6366f1;">nelvis-pc.com/telecharger</a></li>
                     <li>Lancez le fichier en tant qu'administrateur</li>
-                    <li>Entrez le code licence ci-dessus</li>
-                    <li>Laissez NELVIS réparer votre PC !</li>
+                    <li>Entrez un code licence</li>
+                    <li>Laissez NELVIS réparer le PC !</li>
                   </ol>
                   <p style="color: #999; font-size: 12px; margin-top: 30px; text-align: center;">
                     © NELVIS PC Doctor — nelvis-pc.com
