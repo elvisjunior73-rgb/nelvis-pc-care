@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { LogIn, User, Shield } from "lucide-react";
 
 const Index = () => {
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
 
   return (
