@@ -3,6 +3,7 @@ import { useAuth } from "@/hooks/useAuth";
 import LandingScreen from "@/components/LandingScreen";
 import ResellerFAQ from "@/components/ResellerFAQ";
 import Testimonials from "@/components/Testimonials";
+import StatsCounter from "@/components/StatsCounter";
 import KnowledgeBase from "@/components/KnowledgeBase";
 import NelvisFooter from "@/components/NelvisFooter";
 import { Button } from "@/components/ui/button";
@@ -45,6 +46,7 @@ const Index = () => {
 
       <main className="flex-1">
         <LandingScreen />
+        <StatsCounter />
         <Testimonials />
         <KnowledgeBase />
         <ResellerFAQ />
